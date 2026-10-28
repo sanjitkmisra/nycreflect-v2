@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/*
+ * COLOR RATIONALE:
+ * Warm neutrals chosen to evoke "morning light in a brownstone" —
+ * the brief's target aesthetic. These colors signal premium wellness
+ * (think Parsley Health, The Wing) while avoiding clinical sterility.
+ *
+ * Sage green (#6B7D5E) is the primary accent: calming, natural, and
+ * gender-neutral. It avoids the overused therapy-site purples and blues.
+ *
+ * The dark section (#2C2C2A) uses a warm near-black rather than pure black
+ * to maintain warmth even in high-contrast sections.
+ */
+
+@theme inline {
+  /* Warm cream background — avoids clinical white, signals premium */
+  --color-cream: #FAF7F2;
+  --color-cream-light: #FEFDFB;
+
+  /* Sage green — primary accent, conveys calm and growth */
+  --color-sage: #6B7D5E;
+  --color-sage-light: #A8B5A0;
+  --color-sage-muted: rgba(168, 181, 160, 0.3);
+
+  /* Warm browns — grounding, editorial feel */
+  --color-warm-brown: #4A3728;
+  --color-tan: #8B7355;
+  --color-sand: #E8E0D4;
+  --color-blush: #E8D5C8;
+
+  /* Text colors — warm charcoal, never pure black */
+  --color-text-primary: #2C2C2A;
+  --color-text-body: #3A3A38;
+  --color-text-muted: #8B7355;
+
+  /* Dark section */
+  --color-dark: #2C2C2A;
+  --color-dark-text: #FAF7F2;
+  --color-dark-muted: rgba(250, 247, 242, 0.75);
+  --color-dark-subtle: rgba(250, 247, 242, 0.45);
+
+  /* Typography — Cormorant Garamond for display, Jost for body */
+  --font-display: var(--font-cormorant);
+  --font-body: var(--font-jost);
+}
+
+/*
+ * Base styles: light background, refined typography.
+ * font-weight 300 on body gives the editorial lightness the brief demands.
+ * Line-height 1.7 optimizes readability for the copy-heavy sections.
+ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body), sans-serif;
+  color: var(--color-text-body);
+  background: var(--color-cream);
+  line-height: 1.7;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

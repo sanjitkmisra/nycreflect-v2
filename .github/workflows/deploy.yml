@@ -1,0 +1,177 @@
+name: Site check and deploy
+
+# Deploys go through here rather than Vercel's own Git integration. On the
+# Hobby plan Vercel refuses Git deployments of commits by anyone other than
+# the account owner, which would block every change Becca makes. Deploying
+# with Sanjit's token from CI doesn't depend on who wrote the commit.
+#
+# Both jobs build with `vercel build`, which runs vercel.json's buildCommand
+# (`npm run check`), so a change that fails the site check never deploys.
+#
+#   pull request → preview deploy, link posted as a comment on the PR, and
+#                  the same deploy also published at the fixed address
+#                  below so the assistant can hand Becca the link up front
+#   push to main → production deploy to www.nycreflect.com
+#
+# Needs one repository secret: VERCEL_TOKEN.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  VERCEL_ORG_ID: team_DmlLVF44sLPdHSTrUS1Du2FV
+  VERCEL_PROJECT_ID: prj_RuPrsLzMlsMI9cFwCY48v1vhjj16
+  VERCEL_CLI: vercel@65.2.0
+  # Always the newest preview. AGENTS.md tells the assistant to give Becca
+  # this link; the preview banner says which change it is showing.
+  LATEST_PREVIEW_HOST: nycreflect-preview.vercel.app
+
+jobs:
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    concurrency:
+      group: preview-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npx --yes $VERCEL_CLI pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - id: build
+        run: npx --yes $VERCEL_CLI build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          # Shown in the preview-only banner (PreviewBanner.tsx). Passed via
+          # env, not interpolated into the script, since it's free text.
+          NEXT_PUBLIC_PREVIEW_LABEL: ${{ github.event.pull_request.title }}
+      - id: deploy
+        run: .github/scripts/vercel-deploy.sh
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # REST API rather than `vercel alias set`: the CLI command looks up the
+      # token's user first, which a team-scoped token can't do ("User not
+      # found").
+      - name: Publish at the fixed preview address
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          api() { curl --fail-with-body -sS -H "Authorization: Bearer $VERCEL_TOKEN" "$@"; }
+          id=$(api "https://api.vercel.com/v13/deployments/${PREVIEW_URL#https://}?teamId=$VERCEL_ORG_ID" | jq -r .id)
+          api -X POST -H "Content-Type: application/json" \
+            -d "{\"alias\":\"$LATEST_PREVIEW_HOST\"}" \
+            "https://api.vercel.com/v2/deployments/$id/aliases?teamId=$VERCEL_ORG_ID" > /dev/null
+      - name: Post the preview link
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const body = [
+              "<!-- site-preview -->",
+              "### ✅ Preview ready",
+              "",
+              `**[Open the preview](${process.env.PREVIEW_URL})**`,
+              "",
+              `Also at https://${process.env.LATEST_PREVIEW_HOST} until the next change is previewed.`,
+              "",
+              "This is the whole website with this change. The live site hasn't changed yet.",
+              "Check the pages listed above on your phone. If everything looks right, press **Merge pull request** to publish.",
+              "",
+              `<sub>Updated for ${context.payload.pull_request.head.sha.slice(0, 7)}. Push more changes and this link updates.</sub>`,
+            ].join("\n");
+            await upsertComment(body);
+
+            async function upsertComment(body) {
+              const { owner, repo } = context.repo;
+              const issue_number = context.payload.pull_request.number;
+              const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+              const mine = comments.find((c) => c.body?.includes("<!-- site-preview -->"));
+              if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+              else await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+      - name: Explain a failed preview
+        if: failure()
+        uses: actions/github-script@v7
+        env:
+          CHECK_FAILED: ${{ steps.build.outcome == 'failure' }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const why = process.env.CHECK_FAILED === "true"
+              ? "the safety check found a problem with this change"
+              : "something went wrong publishing it (not a problem with the change itself)";
+            const body = [
+              "<!-- site-preview -->",
+              "### ⚠️ No preview yet",
+              "",
+              `There's no preview because ${why}. Nothing has changed on the live site.`,
+              "Ask the assistant to fix it (it can read the details under **Details** next to the failed check), or text Sanjit.",
+            ].join("\n");
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const mine = comments.find((c) => c.body?.includes("<!-- site-preview -->"));
+            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });
+
+  production:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npx --yes $VERCEL_CLI pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - run: npx --yes $VERCEL_CLI build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - run: .github/scripts/vercel-deploy.sh --prod
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # Becca merges and walks away, so a failed publish must not be silent:
+      # tell her on the pull request she merged (she'll see it in the GitHub
+      # app), and open an issue assigned to Sanjit, which emails him. The
+      # usual cause is an expired VERCEL_TOKEN.
+      - name: Say the change did not go live
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({ owner, repo, commit_sha: context.sha });
+            for (const pr of prs) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body: [
+                "### ⚠️ This change did NOT go live",
+                "",
+                "Publishing failed on the website's side, not because of your change. Your live site is still the previous version, so nothing is broken.",
+                "Sanjit has been notified automatically. You don't need to do anything.",
+              ].join("\n") });
+            }
+            await github.rest.issues.create({
+              owner, repo,
+              title: `Publishing to www.nycreflect.com failed (${context.sha.slice(0, 7)})`,
+              assignees: ["sanjitkmisra"],
+              body: [
+                `The production deploy for ${context.sha} failed: ${run}`,
+                prs.length ? `Merged from ${prs.map((p) => `#${p.number}`).join(", ")}.` : "",
+                "",
+                "Most likely cause: the VERCEL_TOKEN secret expired or was revoked. Create a new token (scope: skm2010's projects) at https://vercel.com/account/settings/tokens, replace the secret at https://github.com/sanjitkmisra/nycreflect-v2/settings/secrets/actions, then re-run the failed job.",
+              ].join("\n"),
+            });
