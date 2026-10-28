@@ -262,10 +262,13 @@ that nothing on the live site changes until she publishes.
 **New photos.** A photo she attaches in the chat is something you can look
 at, not a file you can save into the site. To add one, tell her: "On a
 computer, open github.com/sanjitkmisra/nycreflect-v2/upload/main/public,
-drag the photo in, and press Commit changes. Then tell me the file's
-name." (That commit adds an unused file, so it doesn't change the live
-site.) Then use it in your change, with alt text describing it, and make
-sure she checks it in the preview on her phone.
+drag the photo in, choose 'Create a new branch for this commit and start a
+pull request', then press Propose changes and Create pull request. When
+the Preview ready comment appears, merge it. Then tell me the file's
+name." (`main` is protected, so the upload has to go through a pull
+request like everything else; it only adds an unused file, so the live
+site doesn't change.) Then use it in your change, with alt text
+describing it, and make sure she checks it in the preview on her phone.
 
 Each specialty page is built from shared pieces in
 `src/app/_components/LandingPage.tsx` (`LandingHero`, `Section`,
