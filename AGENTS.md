@@ -206,8 +206,10 @@ but can't judge whether something looks good, so you do that part:
     and the error message in `src/app/contact/actions.ts`. In
     `actions.ts`, `TO_EMAIL` must stay **all lowercase**. See the comment
     there.
-  - Availability (virtual/in person, weekdays/weekends): the homepage "What
-    to expect" section in `src/app/page.tsx` and the FAQ in `faq.ts`.
+  - Availability and location (virtual/in person, neighbourhood): the
+    homepage "What to expect" section in `src/app/page.tsx`, the FAQ in
+    `faq.ts`, the structured data in `src/app/layout.tsx`, and
+    `src/app/llms.txt/route.ts`.
   - Zocdoc rating / review count: several mentions in the homepage reviews
     section of `src/app/page.tsx`.
 
