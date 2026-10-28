@@ -14,7 +14,7 @@ import { SITE_URL } from "./_lib/site";
  * crawlers are run conservatively and some publishers block them by
  * default, so an explicit Allow is an unambiguous opt-in rather than an
  * inference from a wildcard. For a practice whose clients increasingly
- * start with "find me a therapist in Chelsea" typed into an assistant,
+ * start with "find me a therapist in NYC" typed into an assistant,
  * being citable in those answers matters as much as ranking in Google:
  *   - GPTBot        — OpenAI, training and retrieval
  *   - OAI-SearchBot — OpenAI, ChatGPT Search results

@@ -20,12 +20,12 @@ export const dynamic = "force-static";
 
 const BODY = `# NYC Reflect — Rebecca Silverman, LCSW
 
-> NYC Reflect is the private psychotherapy practice of Rebecca Silverman, LCSW, in Chelsea, Manhattan. Columbia-trained, formerly NewYork-Presbyterian pediatric psychiatry.
+> NYC Reflect is the private psychotherapy practice of Rebecca Silverman, LCSW, in New York City. Columbia-trained, formerly NewYork-Presbyterian pediatric psychiatry.
 
 ## About
 
 Rebecca Silverman is a licensed psychotherapist (LCSW, New York State) in private
-practice in Chelsea, Manhattan. She spent ten years in pediatric psychiatry at
+practice in New York City. She spent ten years in pediatric psychiatry at
 NewYork-Presbyterian as a staff therapist and held a faculty appointment as a
 Clinical Instructor at Columbia University Medical Center. She works with
 individuals, couples, parents, and adolescents.
@@ -33,18 +33,17 @@ individuals, couples, parents, and adolescents.
 - Specialties: anxiety, OCD, couples and relationships, premarital counseling, parent coaching, adolescent and teen therapy, life transitions
 - Modalities: CBT, DBT, parent management training, mindfulness-based and attachment-based therapy
 - Private pay with superbills for out-of-network reimbursement
-- Virtual and in-person sessions
+- Predominantly virtual; in-person sessions in Williamsburg on request
 - Bilingual English/Spanish
 - Free 15-minute consultation
 
 ## Practice details
 
-- Address: 210 W 19th St, New York, NY 10011 (Chelsea, Manhattan)
 - Phone: 646-285-6294
 - Email: Nycreflect@gmail.com
 - Fees: shared during the initial consultation
 - Insurance: private pay; superbills provided for out-of-network reimbursement, many clients receive 50-80% back
-- Availability: weekdays and weekends, virtual and in person
+- Sessions: predominantly virtual; ask about in-person sessions in Williamsburg
 
 ## Pages
 
